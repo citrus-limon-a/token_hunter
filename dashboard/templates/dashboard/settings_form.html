@@ -1,0 +1,889 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block extrahead %}
+{{ block.super }}
+  <script src="{% url 'admin:jsi18n' %}"></script>
+  {{ media }}
+  <link rel="stylesheet" href="{% static "dashboard/css/spoiler.css" %}">
+  <script src="{% static "dashboard/js/spoiler.js" %}"></script>
+{% endblock %}
+
+{% block coltype %}colM{% endblock %}
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-form{% endblock %}
+{% if not is_popup %}
+  {% block breadcrumbs %}
+    <div class="breadcrumbs">
+      <a href="{% url 'admin:index' %}">
+        <span class="material-symbols-outlined breadcrumbs-icon">
+          home
+        </span>
+      </a>
+      &nbsp;&#47;&nbsp; 
+      {% if has_view_permission %}
+        <a href="{% url opts|admin_urlname:'changelist' %}">
+          {{ opts.verbose_name_plural|capfirst }}
+        </a>
+      {% else %}
+        {{ opts.verbose_name_plural|capfirst }}
+      {% endif %}&nbsp;&#47;
+      {% if add %}
+        {% blocktranslate with name=opts.verbose_name %}Add {{ name }}{% endblocktranslate %}
+      {% else %}
+        {{ original|truncatewords:"18" }}
+      {% endif %}
+    </div>
+  {% endblock %}
+{% endif %}
+{% block content %}
+  <div id="content-main">
+    <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}{% if form_url %}action="{{ form_url }}" {% endif %}method="post" id="{{ opts.model_name }}_form" novalidate>{% csrf_token %}{% block form_top %}{% endblock %}
+      <div {% if not is_popup %} class="content_wrapper"{% endif %}>
+        <div class="content-change-form content-card">
+          {% block object-tools %}
+            {% if change and not is_popup %}
+              <ul class="object-tools">
+                {% block object-tools-items %}
+                  {% change_form_object_tools %}
+                {% endblock %}
+              </ul>
+            {% endif %}
+          {% endblock %}
+          {% if is_popup %}
+            <input type="hidden" name="{{ is_popup_var }}" value="1">
+          {% endif %}
+          {% if to_field %}
+            <input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">
+          {% endif %}
+          {% if save_on_top %}
+            {% block submit_buttons_top %}{% submit_row %}{% endblock %}
+          {% endif %}
+          {% if errors %}
+            <div class="errornote">
+              {% if errors|length == 1 %}
+                {% trans "Please correct the error below." %}
+              {% else %}
+                {% trans "Please correct the errors below." %}
+              {% endif %}
+            </div>
+            {{ adminform.form.non_field_errors }}
+          {% endif %}
+          
+          {% block field_sets %}
+          <fieldset class="module aligned settings-form">
+            <h2>Monitoring Settings</h2>
+            <div class="form-row field-name">
+              <div>
+                <div class="flex-container">
+                  <label class="required" for="id_name">Settings Name:</label>
+                  {{ adminform.form.name }}
+                </div>
+              </div>
+            </div>
+            <div class="form-row field-monitoring_rule">
+              <div>
+                <div class="flex-container">
+                  <label class="required" for="id_monitoring_rule">Token Monitoring Rule:</label>
+                  {{ adminform.form.monitoring_rule }}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row field-mode">
+              <div>
+                <div class="flex-container">
+                  <label class="required" for="id_mode">Trading Mode:</label>
+                  {{ adminform.form.mode }}
+                </div>
+              </div>
+            </div>
+
+            <h2>Token Data</h2>
+            <div class="spoiler">
+              <div class="spoiler-title">
+              <div class="show-icon spoiler-toggle">&nbsp;</div>
+              Token Price</div>
+              
+              <div class="spoiler-content" style="display:none">
+                <div class="settings-form_max-min">
+                  <div class="form-row field-price_min">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_price_min">Minimum Price (USD):</label>
+                        {{ adminform.form.price_min }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="settings-form_dash">
+                    —
+                  </div>
+                  <div class="form-row field-price_max">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_price_max">Maximum Price (USD):</label>
+                        {{ adminform.form.price_max }}
+                      </div>
+                    </div>
+                  </div>
+                  </div>
+              </div>
+            </div>
+
+            <div class="spoiler">
+              <div class="spoiler-title">
+              <div class="show-icon spoiler-toggle">&nbsp;</div>
+              Token Age</div>
+              
+              <div class="spoiler-content" style="display:none">
+                <div class="settings-form_max-min">
+                  <div class="form-row field-token_age_min">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_token_age_min">Minimum Age (min):</label>
+                        {{ adminform.form.token_age_min }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="settings-form_dash">
+                    —
+                  </div>
+                  <div class="form-row field-token_age_max">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_token_age_max">Maximum Age (min):</label>
+                        {{ adminform.form.token_age_max }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          <div class="spoiler">
+              <div class="spoiler-title">
+              <div class="show-icon spoiler-toggle">&nbsp;</div>
+              Buy Transactions</div>
+              
+              <div class="spoiler-content" style="display:none">
+                <div class="settings-form_max-min">
+                  <div class="form-row field-buys_m5_min">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_m5_min">Minimum Buy Count (5 min):</label>
+                        {{ adminform.form.buys_m5_min }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="settings-form_dash">
+                    —
+                  </div>
+                  <div class="form-row field-buys_m5_max">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_m5_max">Maximum Buy Count (5 min):</label>
+                        {{ adminform.form.buys_m5_max }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_max-min">
+                  <div class="form-row field-buys_h1_min">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_h1_min">Minimum Buy Count (1 hour):</label>
+                        {{ adminform.form.buys_h1_min }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="settings-form_dash">
+                    —
+                  </div>
+                  <div class="form-row field-buys_h1_max">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_h1_max">Maximum Buy Count (1 hour):</label>
+                        {{ adminform.form.buys_h1_max }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-form_max-min">
+                  <div class="form-row field-buys_h6_min">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_h6_min">Minimum Buy Count (6 hours):</label>
+                        {{ adminform.form.buys_h6_min }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="settings-form_dash">
+                    —
+                  </div>
+                  <div class="form-row field-buys_h6_max">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_h6_max">Maximum Buy Count (6 hours):</label>
+                        {{ adminform.form.buys_h6_max }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-form_max-min">
+                  <div class="form-row field-buys_h24_min">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_h24_min">Minimum Buy Count (24 hours):</label>
+                        {{ adminform.form.buys_h24_min }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="settings-form_dash">
+                    —
+                  </div>
+                  <div class="form-row field-buys_h24_max">
+                    <div>
+                      <div class="flex-container">
+                        <label for="id_buys_h24_max">Maximum Buy Count (24 hours):</label>
+                        {{ adminform.form.buys_h24_max }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="spoiler">
+              <div class="spoiler-title">
+              <div class="show-icon spoiler-toggle">&nbsp;</div>
+              Sell Transactions</div>
+              
+              <div class="spoiler-content" style="display:none">
+              
+          <div class="settings-form_max-min">
+            <div class="form-row field-sells_m5_min">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_m5_min">Minimum Sell Count (5 min):</label>
+                  {{ adminform.form.sells_m5_min }}
+                </div>
+              </div>
+            </div>
+            <div class="settings-form_dash">
+              —
+            </div>
+            <div class="form-row field-sells_m5_max">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_m5_max">Maximum Sell Count (5 min):</label>
+                  {{ adminform.form.sells_m5_max }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-form_max-min">
+            <div class="form-row field-sells_h1_min">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_h1_min">Minimum Sell Count (1 hour):</label>
+                  {{ adminform.form.sells_h1_min }}
+                </div>
+              </div>
+            </div>
+            <div class="settings-form_dash">
+              —
+            </div>
+            <div class="form-row field-sells_h1_max">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_h1_max">Minimum Sell Count (1 hour):</label>
+                  {{ adminform.form.sells_h1_max }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-form_max-min">
+            <div class="form-row field-sells_h6_min">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_h6_min">Minimum Sell Count (6 hours):</label>
+                  {{ adminform.form.sells_h6_min }}
+                </div>
+              </div>
+            </div>
+            <div class="settings-form_dash">
+              —
+            </div>
+            <div class="form-row field-sells_h6_max">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_h6_max">Maximum Sell Count (6 hours):</label>
+                  {{ adminform.form.sells_h6_max }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-form_max-min">
+            <div class="form-row field-sells_h24_min">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_h24_min">Minimum Sell Count (24 hours):</label>
+                  {{ adminform.form.sells_h24_min }}
+                </div>
+              </div>
+            </div>
+            <div class="settings-form_dash">
+              —
+            </div>
+            <div class="form-row field-sells_h24_max">
+              <div>
+                <div class="flex-container">
+                  <label for="id_sells_h24_max">Maximum Sell Count (24 hours):</label>
+                  {{ adminform.form.sells_h24_max }}
+                </div>
+              </div>
+            </div>
+          </div>
+              </div>
+            </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Trading Volume</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-volume_m5_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_m5_min">Minimum Volume (5 min):</label>
+                      {{ adminform.form.volume_m5_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-volume_m5_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_m5_max">Maximum Volume (5 min):</label>
+                      {{ adminform.form.volume_m5_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="settings-form_max-min">
+                <div class="form-row field-volume_h1_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_h1_min">Minimum Volume (1 hour):</label>
+                      {{ adminform.form.volume_h1_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-volume_h1_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_h1_max">Maximum Volume (1 hour):</label>
+                      {{ adminform.form.volume_h1_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="settings-form_max-min">
+                <div class="form-row field-volume_h6_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_h6_min">Minimum Volume (6 hours):</label>
+                      {{ adminform.form.volume_h6_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-volume_h6_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_h6_max">Maximum Volume (6 hours):</label>
+                      {{ adminform.form.volume_h6_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="settings-form_max-min">
+                <div class="form-row field-volume_h24_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_h24_min">Minimum Volume (24 hours):</label>
+                      {{ adminform.form.volume_h24_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-volume_h24_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_volume_h24_max">Maximum Volume (24 hours):</label>
+                      {{ adminform.form.volume_h24_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Price Change</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">  
+                <div class="form-row field-price_change_m5_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_m5_min">Minimum Price Change (5 min):</label>
+                      {{ adminform.form.price_change_m5_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-price_change_m5_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_m5_max">Maximum Price Change (5 min):</label>
+                      {{ adminform.form.price_change_m5_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="settings-form_max-min">
+                <div class="form-row field-price_change_h1_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_h1_min">Minimum Price Change (1 hour):</label>
+                      {{ adminform.form.price_change_h1_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-price_change_h1_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_h1_max">Maximum Price Change (1 hour):</label>
+                      {{ adminform.form.price_change_h1_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="settings-form_max-min">
+                <div class="form-row field-price_change_h6_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_h6_min">Minimum Price Change (6 hours):</label>
+                      {{ adminform.form.price_change_h6_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-price_change_h6_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_h6_max">Maximum Price Change (6 hours):</label>
+                      {{ adminform.form.price_change_h6_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="settings-form_max-min">
+                <div class="form-row field-price_change_h24_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_h24_min">Minimum Price Change (24 hours):</label>
+                      {{ adminform.form.price_change_h24_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-price_change_h24_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_price_change_h24_max">Maximum Price Change (24 hours):</label>
+                      {{ adminform.form.price_change_h24_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Liquidity</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-liquidity_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_liquidity_min">Minimum Liquidity:</label>
+                      {{ adminform.form.liquidity_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-liquidity_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_liquidity_max">Maximum Liquidity:</label>
+                      {{ adminform.form.liquidity_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            FDV</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-fdv_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_fdv_min">Minimum FDV (USD):</label>
+                      {{ adminform.form.fdv_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-fdv_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_fdv_max">Maximum FDV (USD):</label>
+                      {{ adminform.form.fdv_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Market Capitalization</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-market_cap_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_market_cap_min">Minimum Market Cap (USD):</label>
+                      {{ adminform.form.market_cap_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-market_cap_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_market_cap_max">Maximum Market Cap (USD):</label>
+                      {{ adminform.form.market_cap_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Boost</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-boost_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_boost_min">Minimum Boost:</label>
+                      {{ adminform.form.boost_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-boost_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_boost_max">Maximum Boost:</label>
+                      {{ adminform.form.boost_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Website & Social Media</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="form-row field-is_socio">
+                <div>
+                  <div class="flex-container checkbox-row">
+                    {{ adminform.form.is_socio }}
+                    <label class="vCheckboxLabel" for="id_is_socio">Require at least one social media or website</label>
+                  </div>
+                </div>
+              </div>
+  
+              <div class="form-row field-is_telegram">
+                <div>
+                  <div class="flex-container checkbox-row">
+                    {{ adminform.form.is_telegram }}
+                    <label class="vCheckboxLabel" for="id_is_telegram">Telegram required</label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row field-is_twitter">
+                <div>
+                  <div class="flex-container checkbox-row">
+                    {{ adminform.form.is_twitter }}
+                    <label class="vCheckboxLabel" for="id_is_twitter">X (Twitter) required</label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row field-is_website">
+                <div>
+                  <div class="flex-container checkbox-row">
+                    {{ adminform.form.is_website }}
+                    <label class="vCheckboxLabel" for="id_is_website">Website required</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h2>Top Wallet Data</h2>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Top Traders Buy Volume</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-tt_bought_sum_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_bought_sum_min">Minimum top traders buy volume:</label>
+                      {{ adminform.form.tt_bought_sum_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-tt_bought_sum_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_bought_sum_max">Maximum top traders buy volume:</label>
+                      {{ adminform.form.tt_bought_sum_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Top Traders Sell Volume</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-tt_sold_sum_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_sold_sum_min">Minimum top traders sell volume:</label>
+                      {{ adminform.form.tt_sold_sum_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-tt_sold_sum_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_sold_sum_max">Maximum top traders sell volume:</label>
+                      {{ adminform.form.tt_sold_sum_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Top Traders PNL</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-tt_pnl_loss_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_pnl_loss_min">Minimum negative PNL top traders:</label>
+                      {{ adminform.form.tt_pnl_loss_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-tt_pnl_loss_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_pnl_loss_max">Maximum negative PNL top traders:</label>
+                      {{ adminform.form.tt_pnl_loss_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Top Traders Without Buys</div>
+            
+            <div class="spoiler-content" style="display:none">
+              <div class="settings-form_max-min">
+                <div class="form-row field-tt_no_bought_min">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_no_bought_min">Minimum top traders without buys:</label>
+                      {{ adminform.form.tt_no_bought_min }}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-form_dash">
+                  —
+                </div>
+                <div class="form-row field-tt_no_bought_max">
+                  <div>
+                    <div class="flex-container">
+                      <label for="id_tt_no_bought_max">Maximum top traders without buys:</label>
+                      {{ adminform.form.tt_no_bought_max }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spoiler">
+            <div class="spoiler-title">
+            <div class="show-icon spoiler-toggle">&nbsp;</div>
+            Top Traders Without Sells</div>
+            
+            <div class="spoiler-content" style="display:none">
+            
+          <div class="settings-form_max-min">
+            <div class="form-row field-tt_no_sold_min">
+              <div>
+                <div class="flex-container">
+                  <label for="id_tt_no_sold_min">Minimum top traders without sells:</label>
+                  {{ adminform.form.tt_no_sold_min }}
+                </div>
+              </div>
+            </div>
+            <div class="settings-form_dash">
+              —
+            </div>
+            <div class="form-row field-tt_no_sold_max">
+              <div>
+                <div class="flex-container">
+                  <label for="id_tt_no_sold_max">Maximum top traders without sells:</label>
+                  {{ adminform.form.tt_no_sold_max }}
+                </div>
+              </div>
+            </div>
+          </div>
+            </div>
+          </div>
+          </fieldset>
+          {% endblock %}
+          {% block after_field_sets %}{% endblock %}
+          {% block inline_field_sets %}
+            {% for inline_admin_formset in inline_admin_formsets %}
+              {% include inline_admin_formset.opts.template %}
+            {% endfor %}
+          {% endblock %}
+          {% block after_related_objects %}{% endblock %}
+        </div>
+        {% block submit_buttons_bottom %}
+          <div class="content-submit-form">
+            {% submit_row %}
+          </div>
+        {% endblock %}
+        {% block admin_change_form_document_ready %}
+          <script id="django-admin-form-add-constants" src="{% static 'admin/js/change_form.js' %}"
+            {% if adminform and add %}
+              data-model-name="{{ opts.model_name }}"
+            {% endif %} async>
+          </script>
+        {% endblock %}
+      {# JavaScript for prepopulated fields #}
+      {% prepopulated_fields_js %}
+    </form>
+  </div>
+  <script type="text/javascript" src="{% static 'vendor/select2/js/select2.min.js' %}"></script>
+{% endblock %}

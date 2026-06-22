@@ -1,0 +1,24 @@
+{% load i18n %}
+
+<div class="filter_wrapper">
+<div class="filter_title">{% blocktranslate with filter_title=title %} By {{ filter_title }} {% endblocktranslate %}</div>
+
+  <ul>
+    {% for choice in choices %}
+      <li{% if choice.selected %} class="selected"{% endif %}>
+      <a href="{{ choice.query_string|iriencode }}">{{ choice.display }}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% comment %} <details data-filter-title="{{ title }}" open>
+  <summary>
+    {% blocktranslate with filter_title=title %} By {{ filter_title }} {% endblocktranslate %}
+  </summary>
+  <ul>
+    {% for choice in choices %}
+      <li{% if choice.selected %} class="selected"{% endif %}>
+      <a href="{{ choice.query_string|iriencode }}">{{ choice.display }}</a></li>
+    {% endfor %}
+  </ul>
+</details> {% endcomment %}

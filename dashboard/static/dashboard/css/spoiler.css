@@ -1,0 +1,45 @@
+/* spoiler */
+div.spoiler {
+	padding: 5px 0;
+	line-height: 1.6;
+}
+
+div.spoiler div.spoiler-title {
+	color: #d9d9d9;
+	font-size: 15px;
+	font-weight: bold;
+	padding: 4px 7px;
+	border-radius: 3px;
+	background: #313a43;
+	cursor: pointer;
+}
+
+div.spoiler div.spoiler-title div.spoiler-toggle {
+	display: inline-block;
+	width: 11px;
+	height: 11px;
+	line-height: 14px;
+	margin-left: 4px;
+	margin-right: 6px;
+	cursor: pointer;
+	-webkit-user-modify: read-only;
+}
+
+div.spoiler div.spoiler-title div.hide-icon {
+	background: url('/static/dashboard/img/minus.png') no-repeat scroll left center transparent;
+}
+
+div.spoiler div.spoiler-title div.show-icon {
+	background: url('/static/dashboard/img/plus.png') no-repeat scroll left center transparent;
+}
+
+div.spoiler div.spoiler-content {
+	font-size: 16px;
+	border: 1px solid #313a43;
+	border-top: 0px;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+	border-radius: 3px;
+	background: #141414;
+	padding: 10px;
+}

@@ -1,0 +1,251 @@
+{% load i18n static admin_urls dashboard_tags %}
+{% get_customization_settings as customization %}
+
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE|default:"ru-ru" }}" dir="ltr">
+<head>
+  <title>{% block title %}{% endblock %}</title>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE">{% endblock %}
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0"/>
+
+  <link rel="stylesheet" href="{% static "dashboard/css/base.css" %}">
+  <link rel="stylesheet" href="{% static "dashboard/css/forms.css" %}">
+  <link rel="stylesheet" href="{% static "dashboard/css/navigation.css" %}">
+  <link rel="stylesheet" href="{% static "dashboard/css/widgets.css" %}">
+  <link rel="stylesheet" href="{% static "dashboard/css/responsive.css" %}">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'dashboard/img/icons/apple-touch-icon.png' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'dashboard/img/icons/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'dashboard/img/icons/favicon-16x16.png' %}">
+  <link rel="manifest" href="{% static 'dashboard/img/icons/site.webmanifest' %}">
+
+  <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
+  {% block extrastyle %}{% endblock %}
+  {% block extrahead %}{% endblock %}
+</head>
+
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}" data-admin-utc-offset="{% now "Z" %}">
+  <script>
+    const theme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.dataset.theme = theme;
+  </script>
+  {% block page %}
+    <div class="{% if not is_popup %}wrapper{% else %} popup_wrapper{% endif %}">
+      {% if not is_popup %}
+        <header>
+          <nav class="top-navigation">
+            {% get_search_model as search_model %}
+            {% if search_model %}
+              <div class="search-top__form">
+                <form action="{{ search_model.search_url }}" method="GET">
+                  <div class="search-top__field">
+                    <input class="search-top__input" name="q" type="search" 
+                      placeholder="{% trans 'Search' %} {{ customization.search_model.search_name }}..." 
+                      aria-label="{% trans 'Search' %} {{ customization.search_model.search_name }}...">
+                    <button class="search-top__button" type="submit">
+                      <span class="material-symbols-outlined icon-middle">
+                        search
+                      </span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            {% endif %}
+          </nav>
+          <div class="user_wrapper">
+            <div class="user">
+              <span class="user__welcome">{% trans 'Welcome,' %}</span>
+              <a href="javascript:void(0);" class="user__name">
+                &nbsp;{% firstof user.get_short_name user.get_username %}  
+                <span id="expand-user-menu" class="material-symbols-outlined icon-top">
+                  expand_more
+                </span>
+              </a>
+              <ul id="user-menu" class="user__menu">
+                {% if user.is_active and user.is_staff and docsroot%}
+                  <li class="user__item">
+                    <a href="{% url 'django-admindocs-docroot' %}" class="user__link">
+                      <span class="material-symbols-outlined user__icon">
+                        description
+                      </span>
+                      {% trans 'Documentation' %}
+                    </a>
+                  </li>
+                {% endif %}
+                {% if user.is_active and user.is_staff %}
+                  <li class="user__item">
+                    <a href="{% url "admin:auth_user_change" user.id %}" class="user__link">
+                      <span class="material-symbols-outlined user__icon">
+                        person
+                      </span>
+                      Account
+                    </a>
+                  </li>
+                {% endif %}
+                {% if user.has_usable_password %}
+                  <li class="user__item">
+                    <a href="{% url 'admin:password_change' %}" class="user__link">
+                      <span class="material-symbols-outlined user__icon">
+                        key
+                      </span>
+                      {% trans 'Change password' %}
+                    </a>
+                  </li>
+                {% endif %}
+                <li class="user__item">
+                  <a href="{% url 'admin:logout' %}" class="user__link">
+                    <span class="material-symbols-outlined user__icon">
+                      logout
+                    </span>
+                    {% trans 'Log out' %}
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </header>
+
+        {% if is_nav_sidebar_enabled %}
+          {% block sidebar %}
+            {% get_sidebar_menu as apps %}
+            <aside id="sidebar">
+              <div class="sidebar__logo">
+              <a href="{% url 'admin:index' %}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zm-7.518-.267A8.25 8.25 0 1120.25 10.5M8.288 14.212A5.25 5.25 0 1117.25 10.5" />
+              </svg>
+              <span>TOKEN HUNTER</span>
+              </a>
+              </div>
+              <nav>
+                <a href="{% url 'admin:index' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                  </svg>
+                  Dashboard
+                </a>
+                <a href="{% url 'admin:token_hunter_transaction_changelist' %}" class="nav-link {% if request.path == '/token_hunter/transaction/' %}active{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                  </svg>
+                  Transactions
+                </a>
+                <a href="{% url 'admin:token_hunter_toptrader_changelist' %}" class="nav-link {% if request.path == '/token_hunter/toptrader/' %}active{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Top Wallets
+                </a>
+                <a href="{% url 'admin:token_hunter_settings_changelist' %}" class="nav-link {% if request.path == '/token_hunter/settings/' %}active{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-1.003 1.11-.952l2.176.326a1.125 1.125 0 01.971 1.255l-2.176 8.584a1.125 1.125 0 01-1.255.971l-2.176-.326a1.125 1.125 0 01-.971-1.255L9.594 3.94zM15 12.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Settings
+                </a>
+                <a href="{% url 'admin:django_celery_results_taskresult_changelist' %}" class="nav-link {% if request.path == '/django_celery_results/taskresult/' %}active{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Task results
+                </a>
+              </nav>
+            </aside>
+          {% endblock %}
+        {% endif %}
+      {% endif %}
+    
+      <main>
+        {% block page_content %}
+          {% if not is_popup %}
+            <div class="content__info">
+              {% block nav-breadcrumbs %}
+                <nav aria-label="{% translate 'Breadcrumbs' %}">
+                  {% block breadcrumbs %}
+                    <div class="breadcrumbs">
+                      <a href="{% url 'admin:index' %}">
+                        <span class="material-symbols-outlined breadcrumbs-icon">
+                          home
+                        </span>
+                      </a>
+                      {% if title %}
+                        &nbsp;&#47; Dashboard
+                      {% endif %}
+                    </div>
+                  {% endblock %}
+                </nav>
+              {% endblock %}
+              {% block page_actions %}{% endblock %}
+            </div>
+          {% endif %}
+          <section id="content" class="content">
+            {% block messages %}
+              {% for message in messages %}
+                {% if message.tags == 'success' %}
+                  <div class="message message-success">
+                    <span class="material-symbols-outlined message-icon">
+                      done
+                    </span>
+                    {{ message|capfirst }}
+                    <a href="javascript:void(0)" class="message_close" aria-hidden="true">
+                      <span class="material-symbols-outlined">
+                        close
+                      </span>
+                    </a>
+                  </div>
+                {% elif message.tags == 'error' %}
+                  <div class="message message-danger">
+                    <span class="material-symbols-outlined message-icon">
+                      error
+                    </span>
+                    {{ message|capfirst }}
+                    <a href="javascript:void(0)" class="message_close" aria-hidden="true">
+                      <span class="material-symbols-outlined">
+                        close
+                      </span>
+                    </a>
+                  </div>
+                {% elif message.tags == 'warning' %}
+                  <div class="message message-warning">
+                    <span class="material-symbols-outlined message-icon">
+                      warning
+                    </span>
+                    {{ message|capfirst }}
+                    <a href="javascript:void(0)" class="message_close" aria-hidden="true">
+                      <span class="material-symbols-outlined">
+                        close
+                      </span>
+                    </a>
+                  </div>
+                {% elif message.tags == 'info' %}
+                  <div class="message message-info">
+                    <span class="material-symbols-outlined message-icon">
+                      info
+                    </span>
+                    {{ message|capfirst }}
+                    <a href="javascript:void(0)" class="message_close" aria-hidden="true">
+                      <span class="material-symbols-outlined">
+                        close
+                      </span>
+                    </a>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            {% endblock %}
+            {% block content %}{% endblock %}
+          </section>
+        {% endblock %}
+      </main>
+    </div>
+    {% if not is_popup %}
+      <script src="{% static 'dashboard/js/navigation.js' %}" defer></script>
+      <script src="{% static 'dashboard/js/sidebar.js' %}" defer></script>
+      <script src="{% static 'dashboard/js/theme.js' %}" defer></script>
+    {% endif %}
+  {% endblock %}
+</body>
+</html>
